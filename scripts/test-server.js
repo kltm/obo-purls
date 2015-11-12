@@ -85,11 +85,14 @@ each(all_configs, function(config_fname){
 // Initial server setup.	
 var express = require('express');
 var app = express();
-app.listen(port);
 
+// Homepage!
 app.get('/', function (req, res) {
     res.send('Redirection made easy!');
 });
+
+// Default status.
+var dstatus = 302;
 
 // Start getting routes, cycle through each file's config...
 each(keyed_configs, function(entries, key){
@@ -106,9 +109,10 @@ each(keyed_configs, function(entries, key){
 
 	    ll('Create exact route: ' + exact_route);
 	    app.get(exact_route, function (req, res) {
-		res.statusCode = 302;
+		res.statusCode = dstatus;
 		res.setHeader('Content-Type', 'text/plain');
-		res.setHeader('Location', replacement);
+		//res.setHeader('Location', replacement);
+		res.location(replacement);
 		res.end('Redirecting to ' + replacement);
 	    });
 
@@ -120,18 +124,18 @@ each(keyed_configs, function(entries, key){
 
 	    ll('Create prefix route: ' + prefix_route);
 	    app.get(prefix_route, function (req, res) {
-
+		
 		// Trim out req path and return.
 		//var rpath = req.path;
 		var got = req.params[0];
 		var redirect_final = prefix_target + got;
-
-		//ll(redirect_final);
-
-		res.statusCode = 302;
+		//ll('A: ' + got);
+		//ll('B: ' + redirect_final);
+		
+		res.statusCode = dstatus;
 		res.setHeader('Content-Type', 'text/plain');
-		res.setHeader('Location', + redirect_final);
-		res.end('Redirecting to'  + redirect_final);
+		res.location(redirect_final);
+		res.end('Redirecting to '  + redirect_final);
 	    });
 
 	}else if( typeof(entry['regexp']) !== 'undefined' ){ // regexp
@@ -146,7 +150,7 @@ each(keyed_configs, function(entries, key){
 	    // 	// Trim out req path and return.
 	    // 	var rpath = req.path.substr(key.length+1);
 
-	    // 	res.statusCode = 302;
+	    // 	res.statusCode = dstatus;
 	    // 	res.setHeader('Content-Type', 'text/plain');
 	    // 	res.setHeader('Location', rpath);
 	    // 	res.end('Redirecting to ' + rpath);
@@ -155,3 +159,7 @@ each(keyed_configs, function(entries, key){
 	}
     });
 });
+
+
+// Spin up.
+app.listen(port);
