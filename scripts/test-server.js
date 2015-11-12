@@ -73,12 +73,13 @@ var all_configs = _all_files(config_dir);
 each(all_configs, function(config_fname){
     var fname = config_dir + '/' + config_fname;
     if( path.extname(fname) === '.yml' ){
-	//ll('fn:' + fname);
+	ll('Reading: ' + fname);
 	var conf = yaml.load(config_dir + '/' + config_fname);
 	var bname = path.basename(config_fname);
 	var key = bname.substr(0, bname.length-4);
-	//ll('KEY:' + key);
-	keyed_configs[key] = conf['entries'] || [];
+	var entries = conf['entries'] || [];
+	keyed_configs[key] = entries;
+	ll('KEY:' + key + ', ' + entries.length);
     }
 });
 
@@ -138,23 +139,35 @@ each(keyed_configs, function(entries, key){
 		res.end('Redirecting to '  + redirect_final);
 	    });
 
-	}else if( typeof(entry['regexp']) !== 'undefined' ){ // regexp
+	}else if( typeof(entry['regex']) !== 'undefined' ){ // regexp
 
-	    // var regexp = entry['regexp'];
-	    // var target = entry['replacement'];
-	    // var regexp_route = '/' + key + prefix + '*';
+	    var regexp = entry['regex'];
+	    var target = entry['replacement'];
 
-	    // ll('Create prefix route: ' + prefix_route);
-	    // app.get(prefix_route, function (req, res) {
+	    // Try and tease out what the regexp means.	    
+	    //var regexp_route = '/' + key + regexp;
+	    var regexp_route = regexp;
 
-	    // 	// Trim out req path and return.
-	    // 	var rpath = req.path.substr(key.length+1);
+	    ll('Create prefix route (from: "' + regexp + '"): ' + regexp_route);
+	    app.get(regexp_route, function (req, res) {
 
-	    // 	res.statusCode = dstatus;
-	    // 	res.setHeader('Content-Type', 'text/plain');
-	    // 	res.setHeader('Location', rpath);
-	    // 	res.end('Redirecting to ' + rpath);
-	    // });
+		var rewrite = target;
+
+		// Compile regexp for use (grab matches).
+		var regexp = new RegExp(regexp_route);
+		var rpath = req.path;
+		var matches = regexp.exec(rpath);
+		each(matches, function(match, index){
+		    rewrite = rewrite.replace('$'+index, match);
+		});
+		//ll(rewrite);
+		//_die(matches.join(', '));
+
+	    	res.statusCode = dstatus;
+	    	res.setHeader('Content-Type', 'text/plain');
+	    	res.setHeader('Location', rewrite);
+	    	res.end('Redirecting to ' + rewrite);
+	    });
 
 	}
     });
