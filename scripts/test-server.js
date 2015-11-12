@@ -160,7 +160,7 @@ each(keyed_configs, function(entries, key){
 		each(matches, function(match, index){
 		    rewrite = rewrite.replace('$'+index, match);
 		});
-		//ll(rewrite);
+		ll("Regexp kick to: " + rewrite);
 		//_die(matches.join(', '));
 
 	    	res.statusCode = dstatus;
@@ -172,7 +172,6 @@ each(keyed_configs, function(entries, key){
 	}
     });
 });
-
 
 // Spin up.
 app.listen(port);
